@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery RUL Prediction System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <style>
+        .battery-container {
+            position: relative;
+            width: 150px;
+            height: 300px;
+            margin: 0 auto;
+        }
+        .battery-body {
+            position: absolute;
+            width: 100%;
+            height: 90%;
+            bottom: 0;
+            border: 8px solid #334155;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .battery-terminal {
+            position: absolute;
+            width: 40%;
+            height: 5%;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #334155;
+            border-radius: 5px 5px 0 0;
+        }
+        .battery-level {
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+            background-color: #22c55e;
+            transition: height 1s ease-in-out;
+        }
+        .battery-info {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 50%;
+            color: white;
+            font-weight: bold;
+            z-index: 10;
+            text-shadow: 1px 1px 2px #000;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-slate-800 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13 7H7v6h6V7z" />
+                    <path fill-rule="evenodd" d="M7 2a1 1 0 00-.707 1.707L7 4.414v1.586H5a1 1 0 00-1 1v9a1 1 0 001 1h10a1 1 0 001-1V7a1 1 0 00-1-1h-2V4.414l.707-.707A1 1 0 0013 2H7zm2 6h2v4H9V8z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-xl font-bold">BatteryLife Predictor</span>
+            </div>
+            <div class="space-x-4">
+                <a href="/" class="hover:text-green-400 transition-colors">Home</a>
+                <a href="/login" class="hover:text-green-400 transition-colors">Login</a>
+                <a href="/register" class="hover:text-green-400 transition-colors">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="bg-slate-700 text-white py-20">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold mb-6">Battery Remaining Useful Life Prediction</h1>
+                <p class="text-xl mb-8">Predict the remaining useful life of lithium-ion batteries using advanced machine learning algorithms.</p>
+                <div class="flex space-x-4">
+                    <a href="/login" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center pulse">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                        </svg>
+                        Try Now
+                    </a>
+                    <a href="#learn-more" class="border border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-slate-700 transition-colors flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd" />
+                        </svg>
+                        Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center">
+                <div class="battery-container">
+                    <div class="battery-terminal"></div>
+                    <div class="battery-body">
+                        <div class="battery-level" id="batteryLevel" style="height: 85%;"></div>
+                    </div>
+                    <div class="battery-info" id="batteryInfo">85%</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="learn-more" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 text-slate-800">What is Battery RUL Prediction?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div class="bg-slate-50 p-6 rounded-xl shadow-md">
+                    <div class="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+                        </svg>
+                        <h3 class="text-xl font-bold text-slate-800">Remaining Useful Life</h3>
+                    </div>
+                    <p class="text-slate-600">Remaining Useful Life (RUL) is the length of time a battery is expected to continue operating within its specified performance parameters. Our system uses machine learning to predict this lifespan based on operational parameters.</p>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl shadow-md">
+                    <div class="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                        </svg>
+                        <h3 class="text-xl font-bold text-slate-800">How It Works</h3>
+                    </div>
+                    <p class="text-slate-600">Our system analyzes key battery parameters like discharge time, voltage characteristics, and charging behavior to predict the remaining lifecycle. This helps in maintenance planning and battery replacement strategies.</p>
+                </div>
+            </div>
+            
+            <!-- Flow Diagram -->
+            <div class="mt-16 bg-slate-50 p-8 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-center mb-8 text-slate-800">Application Flow</h3>
+                <div class="flex flex-col md:flex-row justify-between items-center max-w-4xl mx-auto">
+                    <div class="text-center mb-6 md:mb-0">
+                        <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 005 10a1 1 0 10-2 0c0 2.34.971 4.356 2.36 5.806A.5.5 0 004 16.5V17a1 1 0 001 1h10a1 1 0 001-1v-.5a.5.5 0 00-.4-.4A5.986 5.986 0 0015 10a1 1 0 10-2 0 5 5 0 00-.54 2.29A.5.5 0 0011 12a5 5 0 00-2-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <p class="font-semibold text-slate-700">User Login</p>
+                    </div>
+                    
+                    <div class="hidden md:block">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </div>
+                    
+                    <div class="text-center mb-6 md:mb-0">
+                        <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <p class="font-semibold text-slate-700">Input Parameters</p>
+                    </div>
+                    
+                    <div class="hidden md:block">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </div>
+                    
+                    <div class="text-center mb-6 md:mb-0">
+                        <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <p class="font-semibold text-slate-700">ML Processing</p>
+                    </div>
+                    
+                    <div class="hidden md:block">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <p class="font-semibold text-slate-700">RUL Prediction</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technologies Used -->
+    <section class="py-16 bg-slate-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 text-slate-800">Technologies Used</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                    <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Flask</h3>
+                    <p class="text-slate-600">Python web framework used for backend development and API endpoints.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                    <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">TensorFlow</h3>
+                    <p class="text-slate-600">Machine learning framework for building and training neural network models.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                    <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7 2a1 1 0 00-.707 1.707L7 4.414v3.758a1 1 0 01-.293.707l-4 4C.817 14.769 2.354 18 4.828 18h10.343c2.474 0 4.011-3.231 2.122-5.121l-4-4A1 1 0 0113 8.172V4.414l.707-.707A1 1 0 0013 2H7zm2 6.172V4h2v4.172a3 3 0 00.879 2.12l1.027 1.028a4 4 0 00-2.171.102l-.47.156a4 4 0 01-2.53 0l-.563-.187a1.993 1.993 0 00-.114-.035l1.063-1.063A3 3 0 009 8.172z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">NumPy</h3>
+                    <p class="text-slate-600">Scientific computing library for handling numerical operations on arrays.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                    <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Tailwind CSS</h3>
+                    <p class="text-slate-600">Utility-first CSS framework for rapid UI development.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-10">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13 7H7v6h6V7z" />
+                            <path fill-rule="evenodd" d="M7 2a1 1 0 00-.707 1.707L7 4.414v1.586H5a1 1 0 00-1 1v9a1 1 0 001 1h10a1 1 0 001-1V7a1 1 0 00-1-1h-2V4.414l.707-.707A1 1 0 0013 2H7zm2 6h2v4H9V8z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-xl font-bold">BatteryLife Predictor</span>
+                    </div>
+                    <p class="text-slate-300 mt-2">Enhancing battery management through AI prediction.</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-slate-300 hover:text-green-400 transition-colors">Terms</a>
+                    <a href="#" class="text-slate-300 hover:text-green-400 transition-colors">Privacy</a>
+                    <a href="#" class="text-slate-300 hover:text-green-400 transition-colors">Contact</a>
+                </div>
+            </div>
+            <div class="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
+                <p>&copy; 2023 BatteryLife Predictor. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Animate battery level
+        function animateBattery() {
+            const batteryLevel = document.getElementById('batteryLevel');
+            const batteryInfo = document.getElementById('batteryInfo');
+            
+            let level = 85;
+            const interval = setInterval(() => {
+                level -= 1;
+                if (level <= 20) {
+                    batteryLevel.style.backgroundColor = '#ef4444';
+                } else if (level <= 50) {
+                    batteryLevel.style.backgroundColor = '#f59e0b';
+                }
+                
+                batteryLevel.style.height = `${level}%`;
+                batteryInfo.innerText = `${level}%`;
+                
+                if (level <= 15) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        level = 85;
+                        batteryLevel.style.backgroundColor = '#22c55e';
+                        batteryLevel.style.height = `${level}%`;
+                        batteryInfo.innerText = `${level}%`;
+                        animateBattery();
+                    }, 2000);
+                }
+            }, 200);
+        }
+        
+        // Start animation when page loads
+        window.addEventListener('load', animateBattery);
+    </script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction History - Battery RUL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.5s ease-in forwards;
+            opacity: 0;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        @keyframes slideIn {
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-slate-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13 7H7v6h6V7z" />
+                        <path fill-rule="evenodd" d="M7 2a1 1 0 00-.707 1.707L7 4.414v1.586H5a1 1 0 00-1 1v9a1 1 0 001 1h10a1 1 0 001-1V7a1 1 0 00-1-1h-2V4.414l.707-.707A1 1 0 0013 2H7zm2 6h2v4H9V8z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-xl font-bold">BatteryLife Predictor</span>
+                </div>
+                <div class="hidden md:flex space-x-6">
+                    <a href="/" class="flex items-center hover:text-green-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                        </svg>
+                        Home
+                    </a>
+                    <a href="/dashboard" class="flex items-center hover:text-green-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                            <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                        </svg>
+                        Dashboard
+                    </a>
+                    <a href="/predict" class="flex items-center hover:text-green-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm-1 12.75a.75.75 0 001.5 0V8.66l1.95 2.1a.75.75 0 101.1-1.02l-3.25-3.5a.75.75 0 00-1.1 0L6 9.74a.75.75 0 101.1 1.02l1.9-2.06v5.05z" clip-rule="evenodd" />
+                        </svg>
+                        Predict
+                    </a>
+                    <a href="/history" class="flex items-center text-green-400 border-b-2 border-green-400 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        History
+                    </a>
+                    <a href="/logout" class="flex items-center hover:text-green-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+                <div class="md:hidden">
+                    <button id="menu-toggle" class="focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2 space-y-3">
+                <a href="/" class="block py-2 hover:text-green-400 transition-colors">Home</a>
+                <a href="/dashboard" class="block py-2 hover:text-green-400 transition-colors">Dashboard</a>
+                <a href="/predict" class="block py-2 hover:text-green-400 transition-colors">Predict</a>
+                <a href="/history" class="block py-2 text-green-400 font-medium">History</a>
+                <a href="/logout" class="block py-2 hover:text-green-400 transition-colors">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="mb-6 fade-in">
+                    {% for message in messages %}
+                        <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-2 text-green-800 text-sm">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- History Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6 slide-in" style="animation-delay: 0.1s;">
+            <div class="flex items-center justify-between flex-wrap">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-green-500 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                    </svg>
+                    <h1 class="text-2xl font-bold text-slate-800">Prediction History</h1>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <a href="/predict" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow transition duration-200 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        New Prediction
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- History Table -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden slide-in" style="animation-delay: 0.2s;">
+            {% if predictions %}
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-slate-100">
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Cycle Index</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Discharge Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Predicted RUL</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for pred in predictions %}
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ pred.prediction_date }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ pred.cycle_index }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ pred.discharge_time }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            {% if pred.predicted_rul > 200 %}
+                                                bg-green-100 text-green-800
+                                            {% elif pred.predicted_rul > 50 %}
+                                                bg-yellow-100 text-yellow-800
+                                            {% else %}
+                                                bg-red-100 text-red-800
+                                            {% endif %}">
+                                            {{ pred.predicted_rul }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                                        <div class="flex space-x-2">
+                                            <button type="button" class="text-green-600 hover:text-green-900" 
+                                                    onclick="toggleDetails('details-{{ pred.id }}')">
+                                                View Details
+                                            </button>
+                                            <span class="text-slate-300">|</span>
+                                            <a href="{{ url_for('visualize', prediction_id=pred.id) }}" 
+                                               class="text-blue-600 hover:text-blue-900 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V3zm1 0v12h12V3H4z" clip-rule="evenodd"/>
+                                                    <path d="M14 7a1 1 0 00-1-1h-2a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1V7zM8 7a1 1 0 00-1-1H5a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1V7z"/>
+                                                </svg>
+                                                Visualize
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Details Row (hidden by default) -->
+                                <tr id="details-{{ pred.id }}" class="hidden bg-slate-50">
+                                    <td colspan="5" class="px-6 py-4">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <p class="text-sm font-medium text-slate-600">Cycle Index:</p>
+                                                <p class="mt-1 text-sm text-slate-800">{{ pred.cycle_index }}</p>
+                                                
+                                                <p class="text-sm font-medium text-slate-600 mt-3">Discharge Time:</p>
+                                                <p class="mt-1 text-sm text-slate-800">{{ pred.discharge_time }}</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <p class="text-sm font-medium text-slate-600">Decrement 3.6-3.4V:</p>
+                                                <p class="mt-1 text-sm text-slate-800">{{ pred.decrement_36_34V }}</p>
+                                                
+                                                <p class="text-sm font-medium text-slate-600 mt-3">Max Voltage Discharge:</p>
+                                                <p class="mt-1 text-sm text-slate-800">{{ pred.max_voltage_discharge }}</p>
+                                                
+                                                <p class="text-sm font-medium text-slate-600 mt-3">Min Voltage Charge:</p>
+                                                <p class="mt-1 text-sm text-slate-800">{{ pred.min_voltage_charge }}</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <p class="text-sm font-medium text-slate-600">Time at 4.15V:</p>
+                                                <p class="mt-1 text-sm text-slate-800">{{ pred.time_at_415V }}</p>
+                                                
+                                                <p class="text-sm font-medium text-slate-600 mt-3">Time Constant Current:</p>
+                                                <p class="mt-1 text-sm text-slate-800">{{ pred.time_constant_current }}</p>
+                                                
+                                                <p class="text-sm font-medium text-slate-600 mt-3">Charging Time:</p>
+                                                <p class="mt-1 text-sm text-slate-800">{{ pred.charging_time }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-4 flex justify-between items-center">
+                                            <div>
+                                                <span class="text-sm text-slate-500">Prediction Date: {{ pred.prediction_date }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                                    {% if pred.predicted_rul > 200 %}
+                                                        bg-green-100 text-green-800
+                                                    {% elif pred.predicted_rul > 50 %}
+                                                        bg-yellow-100 text-yellow-800
+                                                    {% else %}
+                                                        bg-red-100 text-red-800
+                                                    {% endif %}">
+                                                    Predicted RUL: {{ pred.predicted_rul }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-10 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="text-xl font-bold text-slate-700 mb-2">No Prediction History</h3>
+                    <p class="text-slate-600 mb-4">You haven't made any predictions yet</p>
+                    <a href="/predict" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-md shadow transition duration-200 inline-flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        Make Your First Prediction
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.remove('hidden');
+            } else {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+        
+        // Toggle details row
+        function toggleDetails(id) {
+            const detailsRow = document.getElementById(id);
+            if (detailsRow.classList.contains('hidden')) {
+                detailsRow.classList.remove('hidden');
+            } else {
+                detailsRow.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
